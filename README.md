@@ -35,18 +35,27 @@
 
 ---
 
-## 2. 快速安装部署工作流
+## 2. 一键下载初始化文件
 
-您无需手动复制粘贴配置内容。请在您的项目根目录下打开终端，并运行以下命令，即可直接下载并生成工作流文件：
+您无需手动复制粘贴配置内容。请在您的项目根目录下打开终端，运行以下命令，即可直接下载并创建 `lang.json` 配置模板与 `.github/workflows/deploy.yml` 工作流文件：
 
 ### Linux / macOS / Git Bash
 ```bash
+# 下载 lang.json 配置文件
+curl -fsSL https://raw.githubusercontent.com/doc2401/actions/main/lang/lang.json -o lang.json
+
+# 创建目录并下载工作流文件
 mkdir -p .github/workflows && curl -fsSL https://raw.githubusercontent.com/doc2401/actions/main/lang/deploy-example.yml -o .github/workflows/deploy.yml
 ```
 
 ### PowerShell
 ```powershell
-New-Item -ItemType Directory -Force -Path .github/workflows; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/doc2401/actions/main/lang/deploy-example.yml" -OutFile ".github/workflows/deploy.yml"
+# 下载 lang.json 配置文件
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/doc2401/actions/main/lang/lang.json" -OutFile "lang.json"
+
+# 创建目录并下载工作流文件
+New-Item -ItemType Directory -Force -Path .github/workflows
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/doc2401/actions/main/lang/deploy-example.yml" -OutFile ".github/workflows/deploy.yml"
 ```
 
 ---
