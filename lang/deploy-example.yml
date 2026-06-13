@@ -1,0 +1,28 @@
+name: Deploy Language content to Pages
+
+on:
+  push:
+    branches: ["lang"]
+  workflow_dispatch:
+    inputs:
+      generate_sitemap:
+        description: 'Whether to generate sitemap.xml'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    uses: doc2401/actions/.github/workflows/lang-deploy.yml@main
+    with:
+      generate_sitemap: ${{ github.event_name != 'workflow_dispatch' || inputs.generate_sitemap }}
+      config_path: 'lang.json'

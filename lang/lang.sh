@@ -2,7 +2,7 @@
 set -e
 
 # Configuration
-CONFIG_PATH=${1:-".github/workflows/lang.json"}
+CONFIG_PATH=${1:-"lang.json"}
 BASE_URL=${BASE_URL:-""}
 GENERATE_SITEMAP=${GENERATE_SITEMAP:-true}
 
