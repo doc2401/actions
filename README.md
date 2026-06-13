@@ -6,36 +6,7 @@
 
 ---
 
-## 1. 配置项目参数 (lang.json)
-
-请确保您的项目**根目录**下存在一个 `lang.json` 配置文件。示例如下：
-
-```json
-{
-  "pages": [
-    {
-      "url_comment": "访问的 url",
-      "url": "en/",
-      "path_comment": "合并的目录列表",
-      "path": [
-        "00-nohtml/",
-        "00-html/"
-      ]
-    },
-    {
-      "url": "zh/",
-      "path": [
-        "00-nohtml/",
-        "02-html.qwen_qwen3.5-9b.202604150704/"
-      ]
-    }
-  ]
-}
-```
-
----
-
-## 2. 一键下载初始化文件
+## 1. 一键下载初始化文件
 
 您无需手动复制粘贴配置内容。请在您的项目根目录下打开终端，运行以下命令，即可直接下载并创建 `lang.json` 配置模板与 `.github/workflows/deploy.yml` 工作流文件：
 
@@ -60,7 +31,7 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/doc2401/actions/main/l
 
 ---
 
-## 3. 推送并运行
+## 2. 推送并运行
 
 完成上述两步后，直接将 `.github/workflows/deploy.yml` 和 `lang.json` 提交并推送到您的 `lang` 分支：
 
