@@ -3,17 +3,6 @@ const path = require('path');
 
 // Configuration
 const configPath = process.argv[2] || "lang.json";
-const baseUrl = (process.env.BASE_URL || "").replace(/\/+$/, '');
-const envSitemap = process.env.GENERATE_SITEMAP;
-const generateSitemap = envSitemap === undefined || envSitemap === "" || envSitemap === "true";
-
-console.log("==================================================");
-console.log("Language Deployment Script (Node.js)");
-console.log("==================================================");
-console.log(`Config Path:      ${configPath}`);
-console.log(`Base URL:         ${baseUrl}`);
-console.log(`Generate Sitemap: ${generateSitemap}`);
-console.log("==================================================");
 
 if (!fs.existsSync(configPath)) {
     console.error(`Error: Configuration file '${configPath}' not found.`);
@@ -22,6 +11,28 @@ if (!fs.existsSync(configPath)) {
 
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
+// Resolve base_url: Env var > JSON config > empty string
+const envBaseUrl = process.env.BASE_URL;
+const baseUrlRaw = (envBaseUrl !== undefined && envBaseUrl.trim() !== "") ? envBaseUrl : (config.base_url || "");
+const baseUrl = baseUrlRaw.replace(/\/+$/, '');
+
+// Resolve generate_sitemap: Env var > JSON config > true
+const envSitemap = process.env.GENERATE_SITEMAP;
+let generateSitemap = true;
+if (config.generate_sitemap !== undefined) {
+    generateSitemap = config.generate_sitemap === true || config.generate_sitemap === "true";
+}
+if (envSitemap !== undefined && envSitemap.trim() !== "") {
+    generateSitemap = envSitemap === "true";
+}
+
+console.log("==================================================");
+console.log("Language Deployment Script (Node.js)");
+console.log("==================================================");
+console.log(`Config Path:      ${configPath}`);
+console.log(`Base URL:         ${baseUrl}`);
+console.log(`Generate Sitemap: ${generateSitemap}`);
+console.log("==================================================");
 // 1. Build localized pages
 console.log("Building localized pages...");
 const publicDir = '_public';

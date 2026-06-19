@@ -2,9 +2,9 @@ name: 'Build Language Content'
 description: 'Builds localized static content and generates sitemaps using lang.sh'
 inputs:
   generate_sitemap:
-    description: 'Whether to generate sitemap.xml'
+    description: 'Whether to generate sitemap.xml. Overrides lang.json if set.'
     required: false
-    default: 'true'
+    default: ''
   config_path:
     description: 'Path to config JSON file'
     required: false
