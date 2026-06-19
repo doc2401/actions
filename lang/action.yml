@@ -23,4 +23,4 @@ runs:
         BASE_URL: ${{ inputs.base_url }}
         GENERATE_SITEMAP: ${{ inputs.generate_sitemap }}
       run: |
-        node "${{ github.action_path }}/lang.js" "${{ inputs.config_path }}"
+        node "${{ github.action_path }}/lang_v2.js" "${{ inputs.config_path }}"
