@@ -2,16 +2,16 @@
     "settings_comment": "全局配置。如果 action.yml 传入了对应的值，则会覆盖此处的配置。",
     "settings": {
         "base_url": "",
-        "generate_sitemap": true
+        "generate_sitemap": true,
+        "sitemap_split_comment": "可选，将指定子目录的 html 拆分到独立的 sitemap 中。各个 page 可以覆盖此配置。",
+        "sitemap_split": [
+            "doc/api"
+        ]
     },
     "pages": [
         {
             "url_comment": "访问的 url",
             "url": "en/",
-            "sitemap_split_comment": "可选，将指定子目录的 html 拆分到独立的 sitemap 中，避免单文件过大",
-            "sitemap_split": [
-                "doc/api"
-            ],
             "path_comment": "合并的目录列表",
             "path": [
                 "00-nohtml/",

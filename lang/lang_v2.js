@@ -92,7 +92,8 @@ if (generateSitemap) {
         const targetDir = path.join(publicDir, cleanUrl);
         if (!fs.existsSync(targetDir)) return;
         
-        const splits = Array.isArray(item.sitemap_split) ? item.sitemap_split.map(s => s.replace(/^\/+|\/+$/g, '')) : [];
+        const pageSplits = item.sitemap_split !== undefined ? item.sitemap_split : settings.sitemap_split;
+        const splits = Array.isArray(pageSplits) ? pageSplits.map(s => s.replace(/^\/+|\/+$/g, '')) : [];
         // Sort by length descending to match deepest paths first
         splits.sort((a, b) => b.length - a.length);
         
