@@ -13,14 +13,38 @@ inputs:
     description: 'Base URL for sitemap'
     required: false
     default: ''
+  publish_branch:
+    description: 'Branch to push the compiled _public directory to (e.g., gh-pages). Leave empty to skip.'
+    required: false
+    default: ''
+  github_token:
+    description: 'GitHub token required for pushing (pass ${{ secrets.GITHUB_TOKEN }} if publish_branch is set)'
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
   steps:
     - name: Build and Generate Content
+      id: build
       shell: bash
       env:
         BASE_URL: ${{ inputs.base_url }}
         GENERATE_SITEMAP: ${{ inputs.generate_sitemap }}
+        PUBLISH_BRANCH: ${{ inputs.publish_branch }}
       run: |
         node "${{ github.action_path }}/lang_v2.js" "${{ inputs.config_path }}"
+
+    - name: Push compiled public to branch
+      if: steps.build.outputs.publish_branch != '' && inputs.github_token != ''
+      shell: bash
+      run: |
+        BRANCH="${{ steps.build.outputs.publish_branch }}"
+        echo "Publishing _public to branch: $BRANCH"
+        cd _public
+        git init
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add .
+        git commit -m "chore: auto-publish compiled _public content"
+        git push --force "https://x-access-token:${{ inputs.github_token }}@github.com/${{ github.repository }}.git" master:$BRANCH

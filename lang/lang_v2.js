@@ -27,12 +27,21 @@ if (envSitemap !== undefined && envSitemap.trim() !== "") {
     generateSitemap = envSitemap === "true";
 }
 
+// Resolve publish_branch: Env var > JSON config > empty string
+const envPublishBranch = process.env.PUBLISH_BRANCH;
+const publishBranch = (envPublishBranch !== undefined && envPublishBranch.trim() !== "") ? envPublishBranch : (settings.publish_branch || "");
+
+if (process.env.GITHUB_OUTPUT) {
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `publish_branch=${publishBranch}\n`);
+}
+
 console.log("==================================================");
 console.log("Language Deployment Script (Node.js)");
 console.log("==================================================");
 console.log(`Config Path:      ${configPath}`);
 console.log(`Base URL:         ${baseUrl}`);
 console.log(`Generate Sitemap: ${generateSitemap}`);
+console.log(`Publish Branch:   ${publishBranch || '(None)'}`);
 console.log("==================================================");
 // 1. Build localized pages
 console.log("Building localized pages...");

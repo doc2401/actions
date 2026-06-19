@@ -3,6 +3,8 @@
     "settings": {
         "base_url": "",
         "generate_sitemap": true,
+        "publish_branch_comment": "可选，自动发布编译产物的目标分支名称，例如 gh-pages。留空则不发布。",
+        "publish_branch": "gh-pages",
         "sitemap_split_comment": "可选，将指定子目录的 html 拆分到独立的 sitemap 中。各个 page 可以覆盖此配置。",
         "sitemap_split": [
             "doc/api"
