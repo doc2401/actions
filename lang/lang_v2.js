@@ -50,6 +50,9 @@ if (!fs.existsSync(publicDir)) {
     fs.mkdirSync(publicDir, { recursive: true });
 }
 
+console.log(`  -> Copying config file ${configPath} to ${publicDir}/`);
+fs.copyFileSync(configPath, path.join(publicDir, path.basename(configPath)));
+
 config.pages.forEach(item => {
     const cleanUrl = item.url.replace(/\/+$/, '');
     const targetDir = path.join(publicDir, cleanUrl);
