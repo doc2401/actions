@@ -45,11 +45,12 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Build and Generate Content
-        env:
-          BASE_URL: ${{ steps.pages.outputs.base_url }}
-          GENERATE_SITEMAP: ${{ inputs.generate_sitemap }}
-        run: |
-          node .github/actions-shared/lang/lang_v2.js "${{ inputs.config_path }}"
+        uses: ./.github/actions-shared/lang
+        with:
+          config_path: ${{ inputs.config_path }}
+          base_url: ${{ steps.pages.outputs.base_url }}
+          generate_sitemap: ${{ inputs.generate_sitemap }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
