@@ -13,14 +13,15 @@ const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
 // Resolve base_url: Env var > JSON config > empty string
 const envBaseUrl = process.env.BASE_URL;
-const baseUrlRaw = (envBaseUrl !== undefined && envBaseUrl.trim() !== "") ? envBaseUrl : (config.base_url || "");
+const settings = config.settings || {};
+const baseUrlRaw = (envBaseUrl !== undefined && envBaseUrl.trim() !== "") ? envBaseUrl : (settings.base_url || "");
 const baseUrl = baseUrlRaw.replace(/\/+$/, '');
 
 // Resolve generate_sitemap: Env var > JSON config > true
 const envSitemap = process.env.GENERATE_SITEMAP;
 let generateSitemap = true;
-if (config.generate_sitemap !== undefined) {
-    generateSitemap = config.generate_sitemap === true || config.generate_sitemap === "true";
+if (settings.generate_sitemap !== undefined) {
+    generateSitemap = settings.generate_sitemap === true || settings.generate_sitemap === "true";
 }
 if (envSitemap !== undefined && envSitemap.trim() !== "") {
     generateSitemap = envSitemap === "true";
@@ -86,40 +87,66 @@ if (generateSitemap) {
     
     config.pages.forEach(item => {
         const cleanUrl = item.url.replace(/\/+$/, '');
-        if (!cleanUrl) return;
+        if (!cleanUrl && item.url !== "/") return;
         
-        const sitemapRelPath = `${cleanUrl}/sitemap.xml`;
-        const sitemapFile = path.join(publicDir, sitemapRelPath);
-        
-        console.log(`Generating sub-sitemap: ${sitemapRelPath}`);
-        let sitemapXml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-        sitemapXml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-        
-        let count = 0;
         const targetDir = path.join(publicDir, cleanUrl);
-        if (fs.existsSync(targetDir)) {
-            const htmlFiles = findHtmlFiles(targetDir);
-            htmlFiles.forEach(file => {
-                let relPath = path.relative(publicDir, file);
-                // Ensure forward slashes for URLs, even if run on Windows runners
-                relPath = relPath.replace(/\\/g, '/');
-                
+        if (!fs.existsSync(targetDir)) return;
+        
+        const splits = Array.isArray(item.sitemap_split) ? item.sitemap_split.map(s => s.replace(/^\/+|\/+$/g, '')) : [];
+        // Sort by length descending to match deepest paths first
+        splits.sort((a, b) => b.length - a.length);
+        
+        const groups = { main: [] };
+        splits.forEach(s => groups[s] = []);
+        
+        const htmlFiles = findHtmlFiles(targetDir);
+        htmlFiles.forEach(file => {
+            let relToPage = path.relative(targetDir, file).replace(/\\/g, '/');
+            let matchedSplit = null;
+            for (let s of splits) {
+                if (relToPage.startsWith(s + '/')) {
+                    matchedSplit = s;
+                    break;
+                }
+            }
+            if (matchedSplit) {
+                groups[matchedSplit].push(file);
+            } else {
+                groups.main.push(file);
+            }
+        });
+        
+        for (const [groupName, files] of Object.entries(groups)) {
+            // Skip empty sub-sitemaps
+            if (files.length === 0 && groupName !== 'main') continue;
+            
+            const subName = groupName === 'main' ? 'sitemap.xml' : `sitemap_${groupName.replace(/\//g, '_')}.xml`;
+            const sitemapRelPath = cleanUrl ? `${cleanUrl}/${subName}` : subName;
+            const sitemapFile = path.join(publicDir, sitemapRelPath);
+            
+            console.log(`Generating sub-sitemap: ${sitemapRelPath}`);
+            let sitemapXml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+            sitemapXml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+            
+            let count = 0;
+            files.forEach(file => {
+                let relPath = path.relative(publicDir, file).replace(/\\/g, '/');
                 sitemapXml += `  <url>\n`;
                 sitemapXml += `    <loc>${baseUrl}/${relPath}</loc>\n`;
                 sitemapXml += `    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>\n`;
                 sitemapXml += `  </url>\n`;
                 count++;
             });
+            
+            sitemapXml += '</urlset>\n';
+            fs.writeFileSync(sitemapFile, sitemapXml);
+            console.log(`  -> Added ${count} URLs to ${sitemapRelPath}`);
+            
+            indexXml += `  <sitemap>\n`;
+            indexXml += `    <loc>${baseUrl}/${sitemapRelPath}</loc>\n`;
+            indexXml += `    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>\n`;
+            indexXml += `  </sitemap>\n`;
         }
-        
-        sitemapXml += '</urlset>\n';
-        fs.writeFileSync(sitemapFile, sitemapXml);
-        console.log(`  -> Added ${count} URLs to ${sitemapRelPath}`);
-        
-        indexXml += `  <sitemap>\n`;
-        indexXml += `    <loc>${baseUrl}/${sitemapRelPath}</loc>\n`;
-        indexXml += `    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>\n`;
-        indexXml += `  </sitemap>\n`;
     });
     
     indexXml += '</sitemapindex>\n';
