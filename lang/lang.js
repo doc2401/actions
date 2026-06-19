@@ -1,0 +1,121 @@
+const fs = require('fs');
+const path = require('path');
+
+// Configuration
+const configPath = process.argv[2] || "lang.json";
+const baseUrl = (process.env.BASE_URL || "").replace(/\/+$/, '');
+const envSitemap = process.env.GENERATE_SITEMAP;
+const generateSitemap = envSitemap === undefined || envSitemap === "" || envSitemap === "true";
+
+console.log("==================================================");
+console.log("Language Deployment Script (Node.js)");
+console.log("==================================================");
+console.log(`Config Path:      ${configPath}`);
+console.log(`Base URL:         ${baseUrl}`);
+console.log(`Generate Sitemap: ${generateSitemap}`);
+console.log("==================================================");
+
+if (!fs.existsSync(configPath)) {
+    console.error(`Error: Configuration file '${configPath}' not found.`);
+    process.exit(1);
+}
+
+const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+// 1. Build localized pages
+console.log("Building localized pages...");
+const publicDir = '_public';
+if (!fs.existsSync(publicDir)) {
+    fs.mkdirSync(publicDir, { recursive: true });
+}
+
+config.pages.forEach(item => {
+    const cleanUrl = item.url.replace(/\/+$/, '');
+    const targetDir = path.join(publicDir, cleanUrl);
+    
+    console.log(`Processing URL directory: ${cleanUrl}`);
+    if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+    }
+    
+    item.path.forEach(srcPath => {
+        const cleanPath = srcPath.replace(/\/+$/, '');
+        if (fs.existsSync(cleanPath) && fs.statSync(cleanPath).isDirectory()) {
+            console.log(`  -> Copying ${cleanPath}/* to ${targetDir.replace(/\\/g, '/')}/`);
+            // Uses Node.js built-in cpSync (available in Node 16.7.0+)
+            fs.cpSync(cleanPath, targetDir, { recursive: true, force: true });
+        } else {
+            console.log(`  -> Warning: Source path ${cleanPath} not found or is not a directory!`);
+        }
+    });
+});
+
+// Helper function to find HTML files recursively
+function findHtmlFiles(dir, fileList = []) {
+    if (!fs.existsSync(dir)) return fileList;
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+        const filePath = path.join(dir, file);
+        if (fs.statSync(filePath).isDirectory()) {
+            findHtmlFiles(filePath, fileList);
+        } else if (filePath.endsWith('.html')) {
+            fileList.push(filePath);
+        }
+    }
+    return fileList;
+}
+
+// 2. Generate sitemap.xml
+if (generateSitemap) {
+    console.log("Generating sitemaps...");
+    
+    const indexFile = path.join(publicDir, 'sitemap.xml');
+    let indexXml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    indexXml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+    
+    config.pages.forEach(item => {
+        const cleanUrl = item.url.replace(/\/+$/, '');
+        if (!cleanUrl) return;
+        
+        const sitemapRelPath = `${cleanUrl}/sitemap.xml`;
+        const sitemapFile = path.join(publicDir, sitemapRelPath);
+        
+        console.log(`Generating sub-sitemap: ${sitemapRelPath}`);
+        let sitemapXml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+        sitemapXml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+        
+        let count = 0;
+        const targetDir = path.join(publicDir, cleanUrl);
+        if (fs.existsSync(targetDir)) {
+            const htmlFiles = findHtmlFiles(targetDir);
+            htmlFiles.forEach(file => {
+                let relPath = path.relative(publicDir, file);
+                // Ensure forward slashes for URLs, even if run on Windows runners
+                relPath = relPath.replace(/\\/g, '/');
+                
+                sitemapXml += `  <url>\n`;
+                sitemapXml += `    <loc>${baseUrl}/${relPath}</loc>\n`;
+                sitemapXml += `    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>\n`;
+                sitemapXml += `  </url>\n`;
+                count++;
+            });
+        }
+        
+        sitemapXml += '</urlset>\n';
+        fs.writeFileSync(sitemapFile, sitemapXml);
+        console.log(`  -> Added ${count} URLs to ${sitemapRelPath}`);
+        
+        indexXml += `  <sitemap>\n`;
+        indexXml += `    <loc>${baseUrl}/${sitemapRelPath}</loc>\n`;
+        indexXml += `    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>\n`;
+        indexXml += `  </sitemap>\n`;
+    });
+    
+    indexXml += '</sitemapindex>\n';
+    fs.writeFileSync(indexFile, indexXml);
+    console.log(`Sitemap Index created at ${indexFile}`);
+}
+
+console.log("==================================================");
+console.log("Done!");
+console.log("==================================================");
