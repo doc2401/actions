@@ -18,7 +18,7 @@ inputs:
     required: false
     default: ''
   github_token:
-    description: 'GitHub token required for pushing (pass ${{ secrets.GITHUB_TOKEN }} if publish_branch is set)'
+    description: 'GitHub token required for pushing (pass secrets.GITHUB_TOKEN if publish_branch is set)'
     required: false
     default: ''
 
