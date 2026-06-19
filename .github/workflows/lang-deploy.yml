@@ -49,7 +49,7 @@ jobs:
           BASE_URL: ${{ steps.pages.outputs.base_url }}
           GENERATE_SITEMAP: ${{ inputs.generate_sitemap }}
         run: |
-          bash .github/actions-shared/lang/lang.sh "${{ inputs.config_path }}"
+          node .github/actions-shared/lang/lang_v2.js "${{ inputs.config_path }}"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
